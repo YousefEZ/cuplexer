@@ -1,0 +1,127 @@
+import java_cup.runtime.*;
+
+scan with {: return lexer.next_token(); :};
+
+parser code {:
+
+  static class ErrorInfo {
+    public int line;
+    public int column;
+
+    public ErrorInfo(int line, int column) {
+      this.line = line;
+      this.column = column;
+    }
+  }
+
+  Lexer lexer;
+
+  // used by SC.java to decide whether parsing is successful
+  public boolean syntaxErrors;
+
+  public Parser(Lexer lex) {
+      super(lex);
+      lexer = lex;
+  }
+
+  public void syntax_error(Symbol cur_token) {
+    this.syntaxErrors = true;
+  }
+
+  public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+    this.syntaxErrors = true;
+    report_fatal_error(
+      "Syntax error at line " + (cur_token.left+1) + ", column "
+      + cur_token.right + ".\n", null
+    );
+  }
+
+  public void custom_err_report(String message, int line, int column)
+    throws java.lang.Exception
+  {
+    this.syntaxErrors = true;
+    report_fatal_error( message + "\n", new ErrorInfo(line, column) );
+  }
+
+:};
+
+/* Your code goes here */
+/* Your code goes here */
+/* Your code goes here */
+
+terminal CHAR, FLOAT, RATIONAL, STRING;
+terminal Integer INTEGER;
+terminal TINT, TFLOAT, TRATIONAL, TCHAR, TSTR, TBOOL, IDENTIFIER, VOID;
+terminal BREAK, TOP, DICT, SEQ, RANGE, THREAD, PRINT, READ, RETURN, LEN, WAIT;
+terminal TRUE, FALSE;
+terminal FDEF, TDEF, ALIAS, MAIN, DOT;
+terminal FOR, OF, WHILE, IN, IF, ELIF, ELSE;
+terminal ASSIGN;
+terminal ADD, SUB, MUL, DIV, POW;
+terminal NOT, AND, OR;
+terminal EQ, NOTEQ, LT, LE, GT, GE, CONTAINS;
+terminal LPAREN, LSQBKT, LCURL;
+terminal RPAREN, RSQBKT, RCURL;
+terminal COLON, SEMI, COMMA;
+terminal ILLEGAL_CHARACTER;
+
+nonterminal main, statements, continue;
+nonterminal if_statement, if_continuation;
+nonterminal declaration;
+
+precedence left ADD, SUB, OR;
+precedence left MAIN, IDENTIFIER;
+precedence left MUL, DIV, AND;
+precedence right POW;
+
+start with main;
+
+main ::= statements continue;
+     |   main_def
+     ;
+
+continue ::= main
+         |
+         ;
+
+statements ::= READ IDENTIFIER SEMI
+           |   if_statement
+           |   declaration
+           |   function_def SEMI
+           ;
+
+if_statement ::= IF LPAREN expression RPAREN LCURL main RCURL if_continuation;
+
+if_continuation ::= ELIF LPAREN expression RPAREN LCURL main RCURL if_continuation
+                |   ELSE LCURL main RCURL
+                |
+                ;
+
+declaration ::= types IDENTIFIER ASSIGN expression SEMI
+            |   types IDENTIFER SEMI
+            ;
+
+expression ::= expression PLUS expression
+           |   expression SUB expression
+           |   factor
+           ;
+
+factor ::= factor MUL factor
+       | ...
+       | data
+       ;
+
+data ::= STRING
+     |   INT
+     |   REAL
+     |   FLOAT
+     |   LPAREN dict_seq RPAREN
+     |   LSQBRKT list_seq RSQBRKT
+     ;
+
+function_def ::=
+             |   FDEF IDENTIFIER LPAREN param_list RPAREN LCURL main RCURL SEMI
+
+types ::= TYPE_INT
+      |   TYPE_CHAR
+      ;
